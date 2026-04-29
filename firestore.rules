@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Auth helpers ────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        request.auth.token.email == "oxerfy@gmail.com";
+    }
+
+    function isValidString(val, maxLength) {
+      return val is string && val.size() > 0 && val.size() <= maxLength;
+    }
+
+    function isValidUrl(url) {
+      return url is string && (
+        (url.size() <= 1000 && (url.matches("^https://.*") || url.matches("^http://.*"))) ||
+        (url.size() <= 1048576 && url.matches("^data:image/.*"))
+      );
+    }
+
+    // ── Projects ────────────────────────────────────────────────────
+    match /projects/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.title, 200) &&
+        isValidString(request.resource.data.type, 100) &&
+        isValidUrl(request.resource.data.image_url) &&
+        (!(\"description\" in request.resource.data) || isValidString(request.resource.data.description, 2000));
+      allow delete: if isAdmin();
+    }
+
+    // ── Testimonials ────────────────────────────────────────────────
+    match /testimonials/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.name, 100) &&
+        isValidString(request.resource.data.role, 100) &&
+        isValidString(request.resource.data.text, 2000) &&
+        isValidUrl(request.resource.data.image_url);
+      allow delete: if isAdmin();
+    }
+
+    // ── Services ────────────────────────────────────────────────────
+    match /services/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.title, 200) &&
+        isValidString(request.resource.data.category, 100) &&
+        isValidString(request.resource.data.description, 2000);
+      allow delete: if isAdmin();
+    }
+
+    // ── Pricing ─────────────────────────────────────────────────────
+    match /pricing/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.name, 100) &&
+        isValidString(request.resource.data.priceUSD, 100) &&
+        isValidString(request.resource.data.priceBDT, 100);
+      allow delete: if isAdmin();
+    }
+
+    // ── FAQs ────────────────────────────────────────────────────────
+    match /faqs/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.question, 500) &&
+        isValidString(request.resource.data.answer, 5000);
+      allow delete: if isAdmin();
+    }
+
+    // ── Gallery ─────────────────────────────────────────────────────
+    match /gallery/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidUrl(request.resource.data.image_url);
+      allow delete: if isAdmin();
+    }
+
+    // ── Site Assets ─────────────────────────────────────────────────
+    match /site_assets/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.key, 100) &&
+        isValidUrl(request.resource.data.image_url);
+      allow delete: if isAdmin();
+    }
+
+    // ── Settings ────────────────────────────────────────────────────
+    match /settings/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Contact Submissions ─────────────────────────────────────────
+    match /contact_submissions/{document} {
+      allow create: if
+        isValidString(request.resource.data.name, 200) &&
+        isValidString(request.resource.data.email, 300) &&
+        isValidString(request.resource.data.message, 5000);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── Users ───────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "A portfolio project case study or live link.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Title of the project" },
+        "type": { "type": "string", "description": "Type or category of the project" },
+        "description": { "type": "string", "description": "Description of the project" },
+        "image_url": { "type": "string", "format": "uri", "description": "Image URL for the project thumbnail" },
+        "link": { "type": "string", "format": "uri", "description": "URL to the case study or live project" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Timestamp when the project was created" }
+      },
+      "required": ["title", "type", "image_url"]
+    },
+    "SiteAsset": {
+      "title": "SiteAsset",
+      "description": "Global images like Founder, Why Choose Us, etc.",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string", "description": "A static key like 'founder_image' or 'why_choose_us_1'" },
+        "image_url": { "type": "string", "format": "uri", "description": "Image URL" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["key", "image_url"]
+    },
+    "Testimonial": {
+      "title": "Testimonial",
+      "description": "Client testimonial feedback.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Client name" },
+        "role": { "type": "string", "description": "Client role or company" },
+        "text": { "type": "string", "description": "The testimonial text itself" },
+        "image_url": { "type": "string", "format": "uri", "description": "Client image or logo" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["name", "role", "text", "image_url"]
+    },
+    "GalleryImage": {
+      "title": "GalleryImage",
+      "description": "Image for the rolling gallery.",
+      "type": "object",
+      "properties": {
+        "image_url": { "type": "string", "format": "uri", "description": "Image URL" },
+        "group_id": { "type": "string", "description": "Optional grouping label" },
+        "created_at": { "type": "string", "format": "date-time", "description": "Timestamp" }
+      },
+      "required": ["image_url"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Admin users.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string" }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "Collection of portfolio projects."
+    },
+    "/testimonials/{testimonialId}": {
+      "schema": { "$ref": "#/entities/Testimonial" },
+      "description": "Collection of client testimonials."
+    },
+    "/gallery/{imageId}": {
+      "schema": { "$ref": "#/entities/GalleryImage" },
+      "description": "Collection of gallery images."
+    },
+    "/site_assets/{assetId}": {
+      "schema": { "$ref": "#/entities/SiteAsset" },
+      "description": "Configuration/Global images for specific sections."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Admin users collection."
+    }
+  }
+}
