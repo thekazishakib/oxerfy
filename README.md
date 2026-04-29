@@ -139,7 +139,7 @@ All architectural decisions, content, design direction, and final implementation
 ## Author
 
 **Kazi Shakib**
-[Website](https://kazishakib.vercel.app) · [GitHub](https://github.com/kazishakib) · [LinkedIn](https://linkedin.com/in/kazishakib) · [Instagram](https://instagram.com/kazishakib)
+[Website](https://kazishakib.vercel.app) · [GitHub](https://github.com/thekazishakib) · [LinkedIn](https://linkedin.com/in/kazishakib) · [Instagram](https://instagram.com/thekazishakib)
 
 ---
 
