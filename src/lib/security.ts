@@ -219,6 +219,11 @@ export interface FormValidationResult {
 
 // Allowlists for enum fields — prevents injection of unexpected values
 const ALLOWED_BUDGETS = new Set([
+  '$100-$200',
+  '$400-$500',
+  '$800-$1000',
+  '>$1000',
+  // legacy values
   'Under $500',
   '$500 - $1,000',
   '$1,000 - $2,500',
@@ -228,6 +233,11 @@ const ALLOWED_BUDGETS = new Set([
 ]);
 
 const ALLOWED_TIMELINES = new Set([
+  '<1 month',
+  '1-3 months',
+  '3-6 months',
+  '6+ months',
+  // legacy values
   'ASAP',
   '1-2 weeks',
   '1 month',
