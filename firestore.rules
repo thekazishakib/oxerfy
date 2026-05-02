@@ -1,0 +1,195 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Auth helpers ─────────────────────────────────────────────────────────
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Authoritative admin check — email enforced server-side by Firebase Auth token.
+    // The client-side ALLOWED_EMAILS list is only a UX convenience.
+    function isAdmin() {
+      return isAuthenticated() &&
+        request.auth.token.email == "oxerfy@gmail.com" &&
+        request.auth.token.email_verified == true;
+    }
+
+    // ── Field validators ─────────────────────────────────────────────────────
+
+    function isValidString(val, maxLength) {
+      return val is string && val.size() > 0 && val.size() <= maxLength;
+    }
+
+    function isOptionalString(val, maxLength) {
+      return !(val in request.resource.data) ||
+        (request.resource.data[val] is string &&
+         request.resource.data[val].size() <= maxLength);
+    }
+
+    function isValidUrl(url) {
+      return url is string && (
+        // Remote https URL
+        (url.size() <= 2048 && url.matches('^https://.*')) ||
+        // Data-URL image (stored inline — no Storage bucket)
+        (url.size() <= 1048576 && url.matches('^data:image/(jpeg|png|webp|gif);base64,.*'))
+      );
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() > 5 &&
+        email.size() <= 254 &&
+        email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+    }
+
+    function isValidOrder(val) {
+      return val is int && val >= 0 && val <= 9999;
+    }
+
+    // ── Rate-limit helper (Firestore-side, per-IP is not available) ───────────
+    // Firestore rules cannot enforce per-IP rate limits.
+    // Client-side RateLimiter (security.ts) is the UX guard.
+    // Server-side enforcement: Firebase App Check + Cloud Functions if needed.
+
+    // ── Projects (public read, admin write) ──────────────────────────────────
+    match /projects/{document} {
+      allow read: if true;
+      allow create: if isAdmin() &&
+        isValidString(request.resource.data.title, 200) &&
+        isValidString(request.resource.data.type, 100) &&
+        isValidUrl(request.resource.data.image_url) &&
+        isValidString(request.resource.data.description, 2000) &&
+        (!(request.resource.data.keys().hasAny(['link'])) ||
+          isValidString(request.resource.data.link, 500));
+      allow update: if isAdmin() &&
+        isValidString(request.resource.data.title, 200) &&
+        isValidString(request.resource.data.type, 100) &&
+        isValidString(request.resource.data.description, 2000);
+      allow delete: if isAdmin();
+    }
+
+    // ── Testimonials ─────────────────────────────────────────────────────────
+    match /testimonials/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.name, 100) &&
+        isValidString(request.resource.data.role, 100) &&
+        isValidString(request.resource.data.text, 2000) &&
+        isValidUrl(request.resource.data.image_url);
+      allow delete: if isAdmin();
+    }
+
+    // ── Services ─────────────────────────────────────────────────────────────
+    match /services/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.title, 200) &&
+        isValidString(request.resource.data.category, 100) &&
+        isValidString(request.resource.data.description, 2000) &&
+        isValidOrder(request.resource.data.order);
+      allow delete: if isAdmin();
+    }
+
+    // ── Pricing ──────────────────────────────────────────────────────────────
+    match /pricing/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.name, 100) &&
+        isValidString(request.resource.data.priceUSD, 100) &&
+        isValidString(request.resource.data.priceBDT, 100) &&
+        isValidString(request.resource.data.desc, 500) &&
+        isValidOrder(request.resource.data.order) &&
+        request.resource.data.features is list &&
+        request.resource.data.features.size() <= 20;
+      allow delete: if isAdmin();
+    }
+
+    // ── FAQs ─────────────────────────────────────────────────────────────────
+    match /faqs/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.question, 500) &&
+        isValidString(request.resource.data.answer, 5000) &&
+        isValidOrder(request.resource.data.order);
+      allow delete: if isAdmin();
+    }
+
+    // ── Gallery ──────────────────────────────────────────────────────────────
+    match /gallery/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidUrl(request.resource.data.image_url);
+      allow delete: if isAdmin();
+    }
+
+    // ── Site Assets ──────────────────────────────────────────────────────────
+    // Keys are validated against an allowlist to prevent injection of
+    // arbitrary document names.
+    match /site_assets/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        isValidString(request.resource.data.key, 100) &&
+        request.resource.data.key in [
+          'favicon', 'founder_image', 'why_choose_us_1',
+          'trust_avatar_1', 'trust_avatar_2', 'trust_avatar_3',
+          'logo_image', 'hero_image'
+        ] &&
+        isValidUrl(request.resource.data.image_url);
+      allow delete: if isAdmin();
+    }
+
+    // ── Settings ─────────────────────────────────────────────────────────────
+    match /settings/{document} {
+      allow read: if true;
+      allow create, update: if isAdmin() &&
+        (!(request.resource.data.keys().hasAny(['contact_email'])) ||
+          isValidEmail(request.resource.data.contact_email)) &&
+        (!(request.resource.data.keys().hasAny(['founder_linkedin'])) ||
+          isValidString(request.resource.data.founder_linkedin, 500)) &&
+        (!(request.resource.data.keys().hasAny(['founder_website'])) ||
+          isValidString(request.resource.data.founder_website, 500));
+      allow delete: if isAdmin();
+    }
+
+    // ── Contact Submissions ───────────────────────────────────────────────────
+    // Anyone can create (public contact form).
+    // Only admin can read/update/delete.
+    // Field validation prevents injection & oversized payloads.
+    match /contact_submissions/{document} {
+      allow create: if
+        isValidString(request.resource.data.name, 200) &&
+        isValidEmail(request.resource.data.email) &&
+        isValidString(request.resource.data.message, 5000) &&
+        // Optional fields — validated when present
+        (!(request.resource.data.keys().hasAny(['phone'])) ||
+          isValidString(request.resource.data.phone, 30)) &&
+        (!(request.resource.data.keys().hasAny(['budget'])) ||
+          isValidString(request.resource.data.budget, 100)) &&
+        (!(request.resource.data.keys().hasAny(['timeline'])) ||
+          isValidString(request.resource.data.timeline, 100)) &&
+        // Prevent oversized scope lists
+        (!(request.resource.data.keys().hasAny(['scopes'])) ||
+          (request.resource.data.scopes is list &&
+           request.resource.data.scopes.size() <= 10));
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ── Users ────────────────────────────────────────────────────────────────
+    // Users can only read their own document.
+    // Only admin can create, update, or delete user documents.
+    match /users/{userId} {
+      allow read: if isAuthenticated() &&
+        (request.auth.uid == userId || isAdmin());
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Deny-all fallback ─────────────────────────────────────────────────────
+    // Any collection not explicitly matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+build/
+dist/
+coverage/
+
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# firebase-applet-config.json contains real Firebase credentials — do not commit
+firebase-applet-config.json
+
+# Vercel
+.vercel
+
+# OS / editor
+.DS_Store
+*.log
+*.log.*
+*.swp
+.idea/
+.vscode/settings.json
+
+# Allow example file
+!.env.example
