@@ -27,8 +27,7 @@
 ---
 ## ▶️ Demo Video
 
-
-
+https://github.com/user-attachments/assets/75d52ef4-e84f-47a5-8991-5739a877f7bd
 ---
 ## ✦ Screenshots
 
