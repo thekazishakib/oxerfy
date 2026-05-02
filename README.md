@@ -27,7 +27,7 @@
 ---
 ## ▶️ Demo Video
 
-[![Watch Demo](https://img.youtube.com/vi/YOUR_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+https://github.com/user-attachments/assets/75d52ef4-e84f-47a5-8991-5739a877f7bd
 ---
 ## ✦ Screenshots
 
