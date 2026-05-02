@@ -27,7 +27,7 @@
 ---
 ## ▶️ Demo Video
 
-https://github.com/thekazishakib/Oxerfy/raw/main/docs/screenshots/demo.mp4
+
 
 ---
 ## ✦ Screenshots
